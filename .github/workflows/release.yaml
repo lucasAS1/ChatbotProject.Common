@@ -1,8 +1,9 @@
 name: Publish NuGet Pkg
 on:
-  release:
-    - released
-    - prereleased
+  create:
+    release:
+      - released
+      - prereleased
 jobs:
   Publish:
     env:
