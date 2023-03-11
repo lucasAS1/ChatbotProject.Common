@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ChatbotProject.Common.Domain.Models.Settings;
 using ChatbotProject.Common.Infrastructure.Mongo.Interfaces;
 using Microsoft.Extensions.Options;
@@ -5,6 +6,7 @@ using MongoDB.Driver;
 
 namespace ChatbotProject.Common.Infrastructure.Mongo;
 
+[ExcludeFromCodeCoverage]
 public class Repository<TDocument> : IRepository<TDocument> where TDocument : BaseEntity
 {
     private readonly IMongoCollection<TDocument> _collection;

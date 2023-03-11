@@ -6,5 +6,5 @@ namespace ChatbotProject.Common.Domain.Models.Settings;
 public class ApiSettings
 {
     public RabbitMqSettings RabbitMqSettings { get; init; } = null!;
-    public MongoDbSettings MongoDbSettings { get; set; }
+    public MongoDbSettings MongoDbSettings { get; set; } = null!;
 }
