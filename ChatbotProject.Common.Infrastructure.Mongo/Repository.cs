@@ -1,7 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Text.Json;
 using ChatbotProject.Common.Domain.Models.Settings;
 using ChatbotProject.Common.Infrastructure.Mongo.Interfaces;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace ChatbotProject.Common.Infrastructure.Mongo;
@@ -19,20 +23,25 @@ public class Repository<TDocument> : IRepository<TDocument> where TDocument : Ba
         mongoClient.StartSession();
 
         var mongoDatabase = mongoClient.GetDatabase(database);
-        _collection = mongoDatabase.GetCollection<TDocument>(nameof(TDocument));
+        _collection = mongoDatabase.GetCollection<TDocument>(typeof(TDocument).ToString());
+    }
+    
+    public async Task AddOrUpdateDocument(TDocument document)
+    {
+        var updatedDocument = await UpdateIfExists(document);
+
+        if (updatedDocument is null)
+        {
+            await _collection.InsertOneAsync(document);
+        }
     }
 
-
-    public async Task AddDocument(TDocument document)
+    private async Task<TDocument> UpdateIfExists(TDocument document)
     {
-        await _collection.InsertOneAsync(document);
-    }
+        var filter = new ExpressionFilterDefinition<TDocument>(x => x.Id == document.Id);
 
-    public async Task UpdateDocument(TDocument document)
-    {
-        await _collection.ReplaceOneAsync(
-            new ExpressionFilterDefinition<TDocument>(x => x.Id == document.Id),
-            document);
+        var updatedDocument = await _collection.FindOneAndReplaceAsync(filter, document);
+        return updatedDocument;
     }
 
     public async Task DeleteDocument(TDocument document)
@@ -42,18 +51,17 @@ public class Repository<TDocument> : IRepository<TDocument> where TDocument : Ba
         await _collection.DeleteOneAsync(expressionFilterDefinition);
     }
 
-    public async Task<TDocument> GetDocument(TDocument document)
+    public async Task<TDocument> GetDocument(Expression<Func<TDocument,bool>> filter)
     {
-        var expressionFilterDefinition = new ExpressionFilterDefinition<TDocument>(x => x.Id == document.Id);
-        
+        var expressionFilterDefinition = new ExpressionFilterDefinition<TDocument>(filter);
         var dbQueryResult = await _collection.FindAsync(expressionFilterDefinition);
         
         return dbQueryResult.FirstOrDefault();
     }
 
-    public async Task<List<TDocument>> GetDocuments(TDocument document)
+    public async Task<List<TDocument>> GetDocuments(Expression<Func<TDocument,bool>> filter)
     {
-        var expressionFilterDefinition = new ExpressionFilterDefinition<TDocument>(x => x.Id == document.Id);
+        var expressionFilterDefinition = new ExpressionFilterDefinition<TDocument>(filter);
         
         var dbQueryResult = await _collection.FindAsync(expressionFilterDefinition);
         
