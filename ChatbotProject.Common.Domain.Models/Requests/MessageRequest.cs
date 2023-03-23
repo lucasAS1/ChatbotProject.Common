@@ -7,4 +7,5 @@ public class MessageRequest
 {
     public string ChatId { get; init; } = null!;
     public string Text { get; init; } = null!;
+    public InteractiveMessage InteractiveMessage { get; set; } = null!;
 }
