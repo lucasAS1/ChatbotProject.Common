@@ -1,29 +1,19 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using System.Text.Json;
-using ChatbotProject.Common.Domain.Models.Settings;
 using ChatbotProject.Common.Infrastructure.Mongo.Interfaces;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
 namespace ChatbotProject.Common.Infrastructure.Mongo;
 
 [ExcludeFromCodeCoverage]
-public class Repository<TDocument> : IRepository<TDocument> where TDocument : BaseEntity
+public class Repository<TDocument> : IRepository<TDocument> 
+    where TDocument : BaseEntity
 {
     private readonly IMongoCollection<TDocument> _collection;
     
-    public Repository(IOptions<ApiSettings> config)
+    public Repository(IContext context)
     {
-        var mongoUrl = config.Value.MongoDbSettings.Url;
-        var database = config.Value.MongoDbSettings.Database;
-        var mongoClient = new MongoClient(mongoUrl);
-        mongoClient.StartSession();
-
-        var mongoDatabase = mongoClient.GetDatabase(database);
-        _collection = mongoDatabase.GetCollection<TDocument>(typeof(TDocument).ToString());
+        _collection = context.GetCollection<TDocument>(typeof(TDocument).ToString());
     }
     
     public async Task AddOrUpdateDocument(TDocument document)
